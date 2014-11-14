@@ -87,7 +87,7 @@
 				font-size: 0.75em;
 			}
 			.code {
-				overflow: scroll;
+				overflow: hidden;
 				margin: 0; padding: 10px;
 				border: none;
 				background-color: rgba(0,0,0,0.1);
@@ -143,6 +143,7 @@
 			}
 
 			@media (max-width: 767px) {
+				.code { overflow: scroll; }
 				#polaroid { width: 100%; max-height: 300px; }
 				.example-description { margin-left: 0; }
 
@@ -497,7 +498,7 @@
 		<script>
 
 			var hi = new Vivus('tape', {type: 'scenario-sync', duration: 20, start: 'autostart'}, function () {
-					if (console) {
+					if (window.console) {
 						console.log('Animation finished. [log triggered from callback]');
 					}
 				}),

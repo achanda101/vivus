@@ -55,6 +55,7 @@
     this.frameLength = 0;
     this.currentFrame = 0;
     this.map = [];
+    this.updateByStyle = (navigator.userAgent.indexOf('MSIE') === -1);
 
     // Start
     new Pathformer(element);
@@ -130,8 +131,9 @@
       this.start = options.start || allowedStarts[0];
     }
 
-    this.duration = parsePositiveInt(options.duration, 120);
-    this.delay = parsePositiveInt(options.delay, null);
+    this.duration    = parsePositiveInt(options.duration, 120);
+    this.delay       = parsePositiveInt(options.delay, null);
+    this.dashGap     = parsePositiveInt(options.dashGap, 2);
     this.selfDestroy = !!options.selfDestroy;
 
     if (this.delay >= this.duration) {
@@ -193,15 +195,21 @@
       };
       // Test if the path length is correct
       if (isNaN(pathObj.length)) {
-        if (console && console.warn) {
+        if (window.console && console.warn) {
           console.warn('Vivus [mapping]: cannot retrieve a path element length', path);
         }
         continue;
       }
       totalLength += pathObj.length;
       this.map.push(pathObj);
-      path.style.strokeDasharray = pathObj.length + ' ' + (pathObj.length + 10);
-      path.style.strokeDashoffset = pathObj.length;
+      this.updatePathArray (path, pathObj.length + ', ' + (pathObj.length + this.dashGap));
+      this.updatePathOffset(path, pathObj.length);
+      // path.style.strokeDasharray  = (pathObj.length - this.dashGap) + ', ' + pathObj.length;
+      // path.style.strokeDashoffset = (pathObj.length - this.dashGap);
+      // Little path for IE9 glitches
+      if (!this.updateByStyle) {
+        pathObj.length += this.dashGap;
+      }
     }
 
     totalLength = totalLength === 0 ? 1 : totalLength;
@@ -307,8 +315,27 @@
       progress = Math.max(0, Math.min(1, progress));
       if (path.progress !== progress) {
         path.progress = progress;
-        path.el.style.strokeDashoffset = Math.floor(path.length * (1 - progress));
+        this.updatePathOffset(path.el, Math.floor(path.length * (1 - progress)));
       }
+    }
+  };
+
+
+  Vivus.prototype.updatePathOffset = function (el, value) {
+    if (this.updateByStyle) {
+      el.style.strokeDashoffset = value;
+    }
+    else {
+      el.setAttribute('stroke-dashoffset', value);
+    }
+  };
+
+  Vivus.prototype.updatePathArray = function (el, value) {
+    if (this.updateByStyle) {
+      el.style.strokeDasharray = value;
+    }
+    else {
+      el.setAttribute('stroke-dasharray', value);
     }
   };
 
@@ -409,8 +436,10 @@
     var i, path;
     for (i = 0; i < this.map.length; i++) {
       path = this.map[i];
-      path.el.style.strokeDashoffset = null;
-      path.el.style.strokeDasharray = null;
+      this.updatePathArray (path.el, '');
+      this.updatePathOffset(path.el, '');
+      // path.el.style.strokeDashoffset = null;
+      // path.el.style.strokeDasharray = null;
     }
   };
 
